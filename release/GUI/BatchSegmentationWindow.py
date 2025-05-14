@@ -141,7 +141,7 @@ class BatchSegWin(QtWidgets.QMainWindow,segSettings.Settings):
         self.dropSettVOMethod.currentTextChanged.connect(lambda:segSettings.Settings.do_VoiceOnset(self))
         #-
         self.sldSettVOSegment = self.findChild(QtWidgets.QSlider,'Settings_VO_Segment')
-        seg = 400
+        seg = 200
         self.sldSettVOSegment.setValue(seg)
         self.labSettVOSegment = self.findChild(QtWidgets.QLabel,'Settings_VO_SegmentLabel')
         self.labSettVOSegment.setText(str(seg)+' ms')
@@ -350,80 +350,114 @@ class BatchSegWin(QtWidgets.QMainWindow,segSettings.Settings):
                 
     def SaveResults(self,savefilename = 'BatchSegmentation_VOAT.xlsx'):  
         """
-        Save a file with the time stamps of the recordings
+        Save a file with the time stamps of the recordings, including absolute start and end times from the voice activity detection results.
 
         Returns
         -------
         save: Boolean. Whether it was possible to save the file or not
-
         """
         
         Nsegs = len(self.voiceSegs)
-        #is there any segment to save?
+        print(f"Number of segments to process: {Nsegs}")  # Debugging line
+        
         if Nsegs!=0:
-            # savefilename = 'BatchSegmentation_VOAT.xlsx'
             if self.SaveFilePath!='':
                 Table = pd.DataFrame()
-                #-
-                for SegName in self.voiceSegs:                    
-                    #Try to save onset data
+                for SegName in self.voiceSegs:
                     try:
+                        # Debugging: print the SegName to be processed
+                        print(f"Processing segment: {SegName}")
+                        
+                        #JH - print the content of self.voiceSegs and self.onsetData:
+                        print(f"voiceSegs: {self.voiceSegs}")
+                        print(f"onsetData: {self.onsetData}")
+                        
+                        #onset_key = 'Onset_' + SegName
+                        #if onset_key not in self.onsetData['Data']:
+                        #    print(f"Onset data key '{onset_key}' not found in onsetData")
+                        #    raise KeyError(f"Onset data key '{onset_key}' not found")
+                        
+                        #onsetP = int(self.onsetData['Data'][onset_key][0][0] * 1000)
+                        #saturP = int(self.onsetData['Data'][onset_key][0][1] * 1000)
                         onsetP = int(self.onsetData['Data']['Onset_'+SegName][0][0]*1000)
                         saturP = int(self.onsetData['Data']['Onset_'+SegName][0][1]*1000)
+
+                        #JH - Segment start and end times
+                        SegStart = int(self.voiceSegs[SegName][0][0]*1000)
+                        SegEnd = int(self.voiceSegs[SegName][0][1]*1000)
+                        
+                        # Debugging: print onsetP and saturP values
+                        print(f"onsetP: {onsetP}, saturP: {saturP}")
+                        
+                        # Debugging: print SegStart and SegEnd values
+                        print(f"SegStart: {SegStart}, SegEnd: {SegEnd}")
                         
                         voiceonset = saturP-onsetP
-                        #Create dataframe and append results
+                        SegDur = SegEnd-SegStart
+                        
+                        # Debugging: print values used for creating df
+                        print(f"Creating df with values: {[self.filename, SegName, self.onsetData['Settings'], onsetP, saturP, voiceonset, SegStart, SegEnd, SegDur]}")
+                        
                         df = np.hstack([self.filename,
                                         SegName,
                                         self.onsetData['Settings'],
                                         onsetP,
                                         saturP,
-                                        voiceonset])                        
-                    #-
-                    #If is not possible to save the onset data
+                                        voiceonset,
+                                        SegStart,
+                                        SegEnd,
+                                        SegDur])
+                        
                     except:
-                        print('No onset data with',self.filename) 
+#                    except Exception as e:
+                        # Detailed exception logging
+                        print(f"Exception occurred: {e}")
+                        print(f"Filename: {self.filename}, Segment: {SegName}")
+                        
                         df = np.hstack([self.filename,
                                         SegName,
                                         self.onsetData['Settings'],
                                         0,
                                         0,
+                                        0,
+                                        0,
+                                        0,
                                         0])  
                     #-
                     Table = pd.concat([Table,pd.DataFrame(df).T],ignore_index=True)#Rename columns
+                    
                 cols = {0:'ID',
                         1:'Label',
                         2:'Settings',
                         3:'Start [ms]',
                         4:'End [ms]',
-                        5:'Voice onset [ms]'} 
+                        5:'Voice onset [ms]',
+                        6:'Segment start [ms]',
+                        7:'Segment end [ms]',
+                        8:'Segment duration [ms]'}
                 Table = Table.rename(columns=cols)
+
                 try:
                     #Append dataframe if there is already one create at the location
                     if os.path.exists(self.SaveFilePath+'/'+savefilename):
                         Table_Zero = pd.read_excel(self.SaveFilePath+'/'+savefilename)
                         Table = pd.concat([Table_Zero,Table], ignore_index=True)
-                    #-
-                    #Convert columns to numbers
-                    for cname in ['Start [ms]','End [ms]','Voice onset [ms]']:
+                        
+                    for cname in ['Start [ms]','End [ms]','Voice onset [ms]','Segment start [ms]','Segment end [ms]', 'Segment duration [ms]']:
                         Table[cname] = pd.to_numeric(Table[cname])
-                    
-                    #-
-                    #Save the results
+                        
                     Table.to_excel(self.SaveFilePath+'/'+savefilename,index=False)
-                    
-                    
                     save = True
                 except:
+#                except Exception as e:
+                    print(f"Exception occurred while saving the file: {e}")
                     save = False
         else:
             save = None
-                    
         return save
-        #-------------------------------------------------------------------------------------
-            
+        #-----------------------------------------------------------------------------------
     def SetSavePath(self):
-        #--------------------Prepare data path--------------------------------------------------------------------
+        #-----------------Prepare data path--------------------------------------
         #First check if the selected path exist
         fname = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select a folder to save the results',self.SaveFilePath)
             

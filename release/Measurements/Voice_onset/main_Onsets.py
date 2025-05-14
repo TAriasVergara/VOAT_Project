@@ -222,12 +222,13 @@ def rms(sig,fs,factor=2):
     p = RMS value of x
     p0 = 20uPA = 0.00002 Hearing threshold
     """
-    win_time = 0.025#The size of the frames is fixed to 25ms
-    #The time resolution (step size) is controlled with "factor"
+    step_time = 0.001#The size of the step size (time resolution) is fixed to 1ms
+    #win_time = 0.025#The size of the frames is fixed to 25ms
+    #The window length (window size of frames) is controlled with "factor"
     if factor == 0:
-        step_time = 0.001 #1ms time resolution
+        win_time = 0.001 #1ms time resolution
     else:
-        step_time = 0.005*factor
+        win_time = 0.02*factor
     #Set a threshold based on the energy of the signal
     if len(sig)>3*int(win_time*fs):
         frames = extract_windows(sig,int(win_time*fs),int(step_time*fs))
