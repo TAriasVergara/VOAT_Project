@@ -341,7 +341,7 @@ class BatchSegWin(QtWidgets.QMainWindow,segSettings.Settings):
                 if saveflag==True:
                     DialogsWindow.InfoDiagWin('Results saved as "'+self.SaveFilePath+'/'+savefilename+'"')
                 elif saveflag==False:
-                    DialogsWindow.ErrorDiagWin('The results were not saved because is open by another application')      
+                    DialogsWindow.ErrorDiagWin('The results were not saved because the excel file BatchSegmentation_VOAT.xlsx is open by another application')      
             else:
                 DialogsWindow.ErrorDiagWin('You need to select a folder containing the files to be processed.')
             
@@ -358,7 +358,7 @@ class BatchSegWin(QtWidgets.QMainWindow,segSettings.Settings):
         """
         
         Nsegs = len(self.voiceSegs)
-        print(f"Number of segments to process: {Nsegs}")  # Debugging line
+        # print(f"Number of segments to process: {Nsegs}")  # Debugging line
         
         if Nsegs!=0:
             if self.SaveFilePath!='':
@@ -366,11 +366,11 @@ class BatchSegWin(QtWidgets.QMainWindow,segSettings.Settings):
                 for SegName in self.voiceSegs:
                     try:
                         # Debugging: print the SegName to be processed
-                        print(f"Processing segment: {SegName}")
+                        # print(f"Processing segment: {SegName}")
                         
                         #JH - print the content of self.voiceSegs and self.onsetData:
-                        print(f"voiceSegs: {self.voiceSegs}")
-                        print(f"onsetData: {self.onsetData}")
+                        # print(f"voiceSegs: {self.voiceSegs}")
+                        # print(f"onsetData: {self.onsetData}")
                         
                         #onset_key = 'Onset_' + SegName
                         #if onset_key not in self.onsetData['Data']:
@@ -381,22 +381,27 @@ class BatchSegWin(QtWidgets.QMainWindow,segSettings.Settings):
                         #saturP = int(self.onsetData['Data'][onset_key][0][1] * 1000)
                         onsetP = int(self.onsetData['Data']['Onset_'+SegName][0][0]*1000)
                         saturP = int(self.onsetData['Data']['Onset_'+SegName][0][1]*1000)
+                        
+                        #Features
+                        X = self.onsetData['Data']['Features_'+SegName]
+                        feats = np.asarray(list(X.values()))
+                        feat_name = list(X.keys())
 
                         #JH - Segment start and end times
                         SegStart = int(self.voiceSegs[SegName][0][0]*1000)
                         SegEnd = int(self.voiceSegs[SegName][0][1]*1000)
                         
                         # Debugging: print onsetP and saturP values
-                        print(f"onsetP: {onsetP}, saturP: {saturP}")
+                        # print(f"onsetP: {onsetP}, saturP: {saturP}")
                         
                         # Debugging: print SegStart and SegEnd values
-                        print(f"SegStart: {SegStart}, SegEnd: {SegEnd}")
+                        # print(f"SegStart: {SegStart}, SegEnd: {SegEnd}")
                         
                         voiceonset = saturP-onsetP
                         SegDur = SegEnd-SegStart
                         
                         # Debugging: print values used for creating df
-                        print(f"Creating df with values: {[self.filename, SegName, self.onsetData['Settings'], onsetP, saturP, voiceonset, SegStart, SegEnd, SegDur]}")
+                        # print(f"Creating df with values: {[self.filename, SegName, self.onsetData['Settings'], onsetP, saturP, voiceonset, SegStart, SegEnd, SegDur]}")
                         
                         df = np.hstack([self.filename,
                                         SegName,
@@ -406,13 +411,14 @@ class BatchSegWin(QtWidgets.QMainWindow,segSettings.Settings):
                                         voiceonset,
                                         SegStart,
                                         SegEnd,
-                                        SegDur])
+                                        SegDur,
+                                        feats])
                         
                     except:
 #                    except Exception as e:
                         # Detailed exception logging
-                        print(f"Exception occurred: {e}")
-                        print(f"Filename: {self.filename}, Segment: {SegName}")
+                        # print(f"Exception occurred: {e}")
+                        # print(f"Filename: {self.filename}, Segment: {SegName}")
                         
                         df = np.hstack([self.filename,
                                         SegName,
@@ -435,6 +441,11 @@ class BatchSegWin(QtWidgets.QMainWindow,segSettings.Settings):
                         6:'Segment start [ms]',
                         7:'Segment end [ms]',
                         8:'Segment duration [ms]'}
+                
+                inip = len(cols)
+                for i in range(inip,len(feat_name)+inip):
+                    cols[i] = feat_name[i-inip]
+                
                 Table = Table.rename(columns=cols)
 
                 try:
@@ -450,7 +461,7 @@ class BatchSegWin(QtWidgets.QMainWindow,segSettings.Settings):
                     save = True
                 except:
 #                except Exception as e:
-                    print(f"Exception occurred while saving the file: {e}")
+                    # print(f"Exception occurred while saving the file: {e}")
                     save = False
         else:
             save = None

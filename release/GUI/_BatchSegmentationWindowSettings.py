@@ -96,22 +96,19 @@ class Settings:
         
         #Is it different than None?
         if self.VADmethod != 'None':
-            
+            #-
+            #-
             #----------------------------------------------------------------
             #Voice activity detection using energy
             #----------------------------------------------------------------
             if self.VADmethod == 'Energy':
                 #Display options when the method is selected from dropdown
-                self.box_properties(self.grpSettVADEnergOpt)
+                # self.box_properties(self.grpSettVADEnergOpt)
                 #Only perform VAD when the button is pressed
                 if apply:
-                            
-                    #-
                     #Perform VAD on the current signal
                     sig = self.data[self.recname][self.channel]['signal']
                     fs = self.data[self.recname][self.channel]['fs']
-                    #-
-                    
                     #Slider values for window size and step size
                     win = self.sldSettVADEnerWin.value()
                     step = self.sldSettVADEnerStep.value()

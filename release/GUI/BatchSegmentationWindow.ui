@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>464</width>
-    <height>1176</height>
+    <height>1124</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -606,19 +606,6 @@
                </widget>
               </item>
               <item>
-               <spacer name="horizontalSpacer_19">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
                <widget class="QSlider" name="Settings_VAD_EneWinSize">
                 <property name="minimum">
                  <number>10</number>
@@ -641,19 +628,8 @@
                 </property>
                </widget>
               </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_21">
               <item>
-               <widget class="QLabel" name="label_18">
-                <property name="text">
-                 <string>Step size             </string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer_20">
+               <spacer name="horizontalSpacer_19">
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>
@@ -664,6 +640,17 @@
                  </size>
                 </property>
                </spacer>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_21">
+              <item>
+               <widget class="QLabel" name="label_18">
+                <property name="text">
+                 <string>Step size             </string>
+                </property>
+               </widget>
               </item>
               <item>
                <widget class="QSlider" name="Settings_VAD_EneStepSize">
@@ -688,10 +675,63 @@
                 </property>
                </widget>
               </item>
+              <item>
+               <spacer name="horizontalSpacer_20">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
              </layout>
             </item>
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_12"/>
+             <layout class="QHBoxLayout" name="horizontalLayout_12">
+              <item>
+               <widget class="QLabel" name="label_10">
+                <property name="text">
+                 <string>Energy threshold</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_10">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btnEnergyThresh">
+                <property name="toolTip">
+                 <string>Select energy threshold for VAD</string>
+                </property>
+                <property name="text">
+                 <string>Set </string>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>24</width>
+                  <height>24</height>
+                 </size>
+                </property>
+                <property name="checkable">
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </item>
            </layout>
           </widget>

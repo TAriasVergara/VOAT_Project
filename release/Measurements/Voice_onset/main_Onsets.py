@@ -10,6 +10,7 @@ IMPORTANT: The acoustic, egg, and airflow signal MUST have the same sampling fre
 import logging
 import numpy as np
 import scipy as sp
+from scipy.stats import kurtosis
 from scipy.signal import hilbert, gaussian
 from Measurements.Voice_onset import VocalAttackTime,VocalRiseTime, VoiceOnsetTime
 
@@ -50,13 +51,14 @@ def Acoustic_Onset(sig,fs,time_stamps,labels,method='VRT',kargs={}):
         #Add the initial time of the segment that is being analyzed
         Results['Onset_'+labels[f-1]] = np.hstack([onsets['Start'],onsets['End']]).reshape(1,-1)
         Results['Envelope_'+labels[f-1]] = onsets['Envelope']
+        Results['Features_'+labels[f-1]] = onsets['Features']
         # except:
             # logging.info('Error computing Voice onset on a segment: Start [seconds]: '+str(np.round(ini_time,3))+' End [seconds]: '+str(np.round(end_time,3)))
         #Onset index
         f+=1
     return Results
 
-#======================================================================
+
 #======================================================================
 
 def compute_vrt(sig,fs,kargs):
@@ -120,10 +122,44 @@ def compute_vrt(sig,fs,kargs):
     #-
     envelope = envelope[pre_vo:]
     #-
+    X = feature_extraction(sig,envelope,fs,ti,tf)
+    #-    
     Results = {'Envelope':envelope,
                'Start':ti,
-               'End':tf}
+               'End':tf,
+               'Features':X}
     return Results
+
+#======================================================================
+
+def feature_extraction(sig,envelope,fs,ti,tf):
+    #Normalize the points that form the right triangle
+    x1 = ti/(len(envelope)/fs)#Normalized time
+    x2 = tf/(len(envelope)/fs)
+    # x1 = ti#Normalized time
+    # x2 = tf
+    y1 = envelope[int(ti*fs)]
+    y2 = envelope[int(tf*fs)]
+    # #Compute the vertices
+    # hyp = euc_dist(x1,y1,x2,y2)#Hypotenuse
+    # adj = euc_dist(x1,y1,x2,y1)#Adjacent
+    #Angle between hypothenuse and adjacent
+    # theta = np.arccos(adj/hyp)
+    theta = np.arctan((y2-y1)/(x2-x1))
+    # Phase in degrees
+    slope = int(theta*180/np.pi)
+    #-
+    # #Area triangle rise time
+    # opp = np.sqrt((hyp**2)-(adj**2))
+    # area = 0.5*(adj*opp)
+    
+    #Kurtosis
+    kur = np.round(kurtosis(sig[int(ti*fs):int(tf*fs)]),4)
+    
+    
+    X = {'Slope (Degrees)':slope,
+         'Kurtosis':kur}
+    return X
 
 #*****************************************************************************
 def hilb_tr(signal,fs,factor=2):

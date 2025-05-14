@@ -1,4 +1,5 @@
 INFO:root:Starting app
 INFO:root:=-==-==-==-==-==-==-==-==-==-=
+INFO:root:Opening segmentation window
+INFO:root:=-==-==-==-==-==-==-==-==-==-=
 INFO:root:Opening batch of files segmentation window
-INFO:root:Closing app

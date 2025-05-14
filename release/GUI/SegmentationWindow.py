@@ -868,11 +868,19 @@ class SegWin(QtWidgets.QMainWindow,segSettings.Settings):
                         saturP = self.onsetData['Data']['Onset_'+SegName][0][1]
                         
                         voiceonset = int((saturP-onsetP)*1000)
+                        
+                        
+                        #Features
+                        X = self.onsetData['Data']['Features_'+SegName]
+                        feats = np.asarray(list(X.values()))
+                        feat_name = list(X.keys())
+                        
                         #Create dataframe and append results
                         df = np.hstack([self.filename,
                                         SegName,
                                         self.onsetData['Settings'],
-                                        voiceonset])
+                                        voiceonset,
+                                        feats])
                         Table = pd.concat([Table,pd.DataFrame(df).T],ignore_index=True)
                         #Rename columns
                         cols = {0:'ID',
@@ -897,6 +905,11 @@ class SegWin(QtWidgets.QMainWindow,segSettings.Settings):
                                 3:'End [seconds]'}   
                         
                 #-
+                
+                inip = len(cols)
+                for i in range(inip,len(feat_name)+inip):
+                    cols[i] = feat_name[i-inip]
+                    
                 Table = Table.rename(columns=cols)
                 #Append dataframe if there is already one create at the location
                 if os.path.exists(self.SaveFilePath+'/'+filename):
