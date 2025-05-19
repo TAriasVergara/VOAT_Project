@@ -901,8 +901,9 @@ class SegWin(QtWidgets.QMainWindow,segSettings.Settings):
                         Table = pd.concat([Table,pd.DataFrame(df).T],ignore_index=True)#Rename columns
                         cols = {0:'ID',
                                 1:'Label',
-                                2:'Start [seconds]',
-                                3:'End [seconds]'}   
+                                2:'Settings',
+                                3:'Start [seconds]',
+                                4:'End [seconds]'}   
                         
                 #-
                 
@@ -915,6 +916,10 @@ class SegWin(QtWidgets.QMainWindow,segSettings.Settings):
                 if os.path.exists(self.SaveFilePath+'/'+filename):
                     Table_Zero = pd.read_excel(self.SaveFilePath+'/'+filename)
                     Table = pd.concat([Table_Zero,Table], ignore_index=True)
+                    
+                cols = list(Table.columns)
+                for cname in cols[3:]:
+                    Table[cname] = pd.to_numeric(Table[cname])
                             
                 #-
                 logging.info('Saving segmentation results in '+self.SaveFilePath+'/'+filename)

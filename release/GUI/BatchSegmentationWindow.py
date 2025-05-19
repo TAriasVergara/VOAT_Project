@@ -453,8 +453,9 @@ class BatchSegWin(QtWidgets.QMainWindow,segSettings.Settings):
                     if os.path.exists(self.SaveFilePath+'/'+savefilename):
                         Table_Zero = pd.read_excel(self.SaveFilePath+'/'+savefilename)
                         Table = pd.concat([Table_Zero,Table], ignore_index=True)
-                        
-                    for cname in ['Start [ms]','End [ms]','Voice onset [ms]','Segment start [ms]','Segment end [ms]', 'Segment duration [ms]']:
+                    
+                    cols = list(Table.columns)
+                    for cname in cols[3:]:
                         Table[cname] = pd.to_numeric(Table[cname])
                         
                     Table.to_excel(self.SaveFilePath+'/'+savefilename,index=False)

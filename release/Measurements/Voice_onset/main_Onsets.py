@@ -10,7 +10,7 @@ IMPORTANT: The acoustic, egg, and airflow signal MUST have the same sampling fre
 import logging
 import numpy as np
 import scipy as sp
-from scipy.stats import kurtosis
+from scipy.stats import kurtosis, skew
 from scipy.signal import hilbert, gaussian
 from Measurements.Voice_onset import VocalAttackTime,VocalRiseTime, VoiceOnsetTime
 
@@ -122,7 +122,7 @@ def compute_vrt(sig,fs,kargs):
     #-
     envelope = envelope[pre_vo:]
     #-
-    X = feature_extraction(sig,envelope,fs,ti,tf)
+    X = feature_extraction(sig[pre_vo:],envelope,fs,ti,tf)
     #-    
     Results = {'Envelope':envelope,
                'Start':ti,
@@ -133,33 +133,75 @@ def compute_vrt(sig,fs,kargs):
 #======================================================================
 
 def feature_extraction(sig,envelope,fs,ti,tf):
-    #Normalize the points that form the right triangle
-    x1 = ti/(len(envelope)/fs)#Normalized time
-    x2 = tf/(len(envelope)/fs)
-    # x1 = ti#Normalized time
-    # x2 = tf
-    y1 = envelope[int(ti*fs)]
-    y2 = envelope[int(tf*fs)]
-    # #Compute the vertices
-    # hyp = euc_dist(x1,y1,x2,y2)#Hypotenuse
-    # adj = euc_dist(x1,y1,x2,y1)#Adjacent
-    #Angle between hypothenuse and adjacent
-    # theta = np.arccos(adj/hyp)
-    theta = np.arctan((y2-y1)/(x2-x1))
-    # Phase in degrees
-    slope = int(theta*180/np.pi)
-    #-
-    # #Area triangle rise time
-    # opp = np.sqrt((hyp**2)-(adj**2))
-    # area = 0.5*(adj*opp)
+
+    feats = {'Slope (Degrees)':0,
+         'Deviation':0,
+         'Skewness':0,
+         'Kurtosis':0,
+         'Intensity (dB)':0,
+         'Intensity Shift (dB)':0}
     
-    #Kurtosis
-    kur = np.round(kurtosis(sig[int(ti*fs):int(tf*fs)]),4)
+    try:
+        #Normalize the points that form the right triangle
+        x1 = ti/(len(envelope)/fs)#Normalized time
+        x2 = tf/(len(envelope)/fs)
+        # x1 = ti#Normalized time
+        # x2 = tf
+        y1 = envelope[int(ti*fs)]
+        y2 = envelope[int(tf*fs)]
+        # #Compute the vertices
+        # hyp = euc_dist(x1,y1,x2,y2)#Hypotenuse
+        # adj = euc_dist(x1,y1,x2,y1)#Adjacent
+        #Angle between hypothenuse and adjacent
+        # theta = np.arccos(adj/hyp)
+        theta = np.arctan((y2-y1)/(x2-x1))
+        # Phase in degrees
+        slope = int(theta*180/np.pi)
+        #-
+        # #Area triangle rise time
+        # opp = np.sqrt((hyp**2)-(adj**2))
+        # area = 0.5*(adj*opp)
+        
+        #Signal/voice onset
+        s = sig[int(ti*fs):int(tf*fs)].copy()
+        
+        #Average
+        # eps = np.finfo(np.float32).eps#To avoid errors
+        # VO_avg = np.round(np.mean(s),4)
+        
+        #Standard deviation
+        VO_std = np.round(np.std(s),4)
+        
+        #Kurtosis
+        VO_kur = np.round(kurtosis(s),4)
+        
+        #Skewness
+        VO_skew = np.round(skew(s),4)
+        
+        #Intensity (dBs)
+        VO_E = np.round(10*np.log10(np.sqrt(np.sum((s)**2)/(len(s)))),2)
+        #-
+        #'Intensity difference'
+        VO_E1 = np.round(10*np.log10(np.sqrt(np.sum((s[0:int(len(s)/2)])**2)/(len(s[0:int(len(s)/2)])))),2)
+        VO_E2 = np.round(10*np.log10(np.sqrt(np.sum((s[int(len(s)/2):])**2)/(len(s[int(len(s)/2):])))),2)
+        VO_DiffE = VO_E2-VO_E1
+        
+        #Get features into list
+        X = [slope,VO_std,VO_skew,VO_kur,VO_E,VO_DiffE]
+        
+        # np.savetxt('Envelope.txt', envelope, delimiter=',')
+        # np.savetxt('VO.txt', s, delimiter=',')
+
+        
+        i = 0
+        for k in list(feats.keys()):
+            feats[k] = X[i]
+            i+=1
+        
+    except:
+        return feats
     
-    
-    X = {'Slope (Degrees)':slope,
-         'Kurtosis':kur}
-    return X
+    return feats
 
 #*****************************************************************************
 def hilb_tr(signal,fs,factor=2):
