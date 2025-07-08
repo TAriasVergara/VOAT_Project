@@ -165,29 +165,42 @@ def feature_extraction(sig,envelope,fs,ti,tf):
         #Signal/voice onset
         s = sig[int(ti*fs):int(tf*fs)].copy()
         
-        #Average
-        # eps = np.finfo(np.float32).eps#To avoid errors
-        # VO_avg = np.round(np.mean(s),4)
         
-        #Standard deviation
-        VO_std = np.round(np.std(s),4)
+        if len(s)>0:
+            #Average
+            # eps = np.finfo(np.float32).eps#To avoid errors
+            # VO_avg = np.round(np.mean(s),4)
+            
+            #Standard deviation
+            VO_std = np.round(np.std(s),4)
+            
+            #Kurtosis
+            VO_kur = np.round(kurtosis(s),4)
+            
+            #Skewness
+            VO_skew = np.round(skew(s),4)
         
-        #Kurtosis
-        VO_kur = np.round(kurtosis(s),4)
+            #Intensity (dBs)
+            VO_E = np.round(10*np.log10(np.sqrt(np.sum((s)**2)/(len(s)))),2)
+            #-
+            #'Intensity difference'
         
-        #Skewness
-        VO_skew = np.round(skew(s),4)
+            eNUM_1 = (s[0:int(len(s)/2)])**2
+            eDEN_1 = len(s[0:int(len(s)/2)])
+            eNUM_2 = (s[int(len(s)/2):])**2
+            eDEN_2 = len(s[int(len(s)/2):])
+            VO_E1 = np.round(10*np.log10(np.sqrt(np.sum(eNUM_1/eDEN_1))),2)
+            VO_E2 = np.round(10*np.log10(np.sqrt(np.sum(eNUM_2/eDEN_2))),2)
+            VO_DiffE = VO_E2-VO_E1
+            
+            #Get features into list
+            X = [slope,VO_std,VO_skew,VO_kur,VO_E,VO_DiffE]
+        else:
+            
+            #Get features into list
+            X = [0,0,0,0,0,0]
+            
         
-        #Intensity (dBs)
-        VO_E = np.round(10*np.log10(np.sqrt(np.sum((s)**2)/(len(s)))),2)
-        #-
-        #'Intensity difference'
-        VO_E1 = np.round(10*np.log10(np.sqrt(np.sum((s[0:int(len(s)/2)])**2)/(len(s[0:int(len(s)/2)])))),2)
-        VO_E2 = np.round(10*np.log10(np.sqrt(np.sum((s[int(len(s)/2):])**2)/(len(s[int(len(s)/2):])))),2)
-        VO_DiffE = VO_E2-VO_E1
-        
-        #Get features into list
-        X = [slope,VO_std,VO_skew,VO_kur,VO_E,VO_DiffE]
         
         # np.savetxt('Envelope.txt', envelope, delimiter=',')
         # np.savetxt('VO.txt', s, delimiter=',')

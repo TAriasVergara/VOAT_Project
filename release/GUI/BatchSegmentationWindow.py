@@ -313,35 +313,35 @@ class BatchSegWin(QtWidgets.QMainWindow,segSettings.Settings):
                     #Envelope, saturation points, etc...
                     self.onsetData = {}
                     
-                    try:
-                        if (self.FileFormat.upper().find('.wav'.upper())!=-1)or(self.FileFormat.upper().find('.adicht'.upper())!=-1):
-                            self.get_standard_files()
-                        else:
-                            self.get_GAT_files(self.FileOpt)
+                    # try:
+                    if (self.FileFormat.upper().find('.wav'.upper())!=-1)or(self.FileFormat.upper().find('.adicht'.upper())!=-1):
+                        self.get_standard_files()
+                    else:
+                        self.get_GAT_files(self.FileOpt)
+                    
+                    #Perform the selected Filter method.
+                    segSettings.Settings.do_filter(self,apply=True)
+                    
+                    #Perform the selected VAD method.
+                    segSettings.Settings.do_VAD(self,apply=True)
+                    
+                    #Voice onset detection
+                    segSettings.Settings.do_VoiceOnset(self,apply=True)
+                    
+                    #Save Excel file
+                    saveflag = self.SaveResults(savefilename)
+                    
+                    #Progression bar
+                    idxbar+=1
+                    self.barProgressBatch.setValue((idxbar/len(self.ListFiles))*100)
                         
-                        #Perform the selected Filter method.
-                        segSettings.Settings.do_filter(self,apply=True)
-                        
-                        #Perform the selected VAD method.
-                        segSettings.Settings.do_VAD(self,apply=True)
-                        
-                        #Voice onset detection
-                        segSettings.Settings.do_VoiceOnset(self,apply=True)
-                        
-                        #Save Excel file
-                        saveflag = self.SaveResults(savefilename)
-                        
-                        #Progression bar
-                        idxbar+=1
-                        self.barProgressBatch.setValue((idxbar/len(self.ListFiles))*100)
-                        
-                    except:
-                        saveflag=False
+                    # except:
+                    #     saveflag=False
                     
                 if saveflag==True:
                     DialogsWindow.InfoDiagWin('Results saved as "'+self.SaveFilePath+'/'+savefilename+'"')
                 elif saveflag==False:
-                    DialogsWindow.ErrorDiagWin('The results were not saved because the excel file BatchSegmentation_VOAT.xlsx is open by another application')      
+                    DialogsWindow.ErrorDiagWin('An error ocurred. Check file integrity or that no other program is using the excel file used to save results')      
             else:
                 DialogsWindow.ErrorDiagWin('You need to select a folder containing the files to be processed.')
             
@@ -447,23 +447,24 @@ class BatchSegWin(QtWidgets.QMainWindow,segSettings.Settings):
                     cols[i] = feat_name[i-inip]
                 
                 Table = Table.rename(columns=cols)
-
-                try:
-                    #Append dataframe if there is already one create at the location
-                    if os.path.exists(self.SaveFilePath+'/'+savefilename):
-                        Table_Zero = pd.read_excel(self.SaveFilePath+'/'+savefilename)
-                        Table = pd.concat([Table_Zero,Table], ignore_index=True)
+                # try:
+                #Append dataframe if there is already one create at the location
+                if os.path.exists(self.SaveFilePath+'/'+savefilename):
+                    Table_Zero = pd.read_excel(self.SaveFilePath+'/'+savefilename)
+                    Table = pd.concat([Table_Zero,Table], ignore_index=True)
+                
+                cols = list(Table.columns)
+                for cname in cols[3:]:
+                    Table[cname] = pd.to_numeric(Table[cname])
                     
-                    cols = list(Table.columns)
-                    for cname in cols[3:]:
-                        Table[cname] = pd.to_numeric(Table[cname])
-                        
-                    Table.to_excel(self.SaveFilePath+'/'+savefilename,index=False)
-                    save = True
-                except:
+                    
+                # Table = Table.style.apply(self.highlight_columns)
+                Table.to_excel(self.SaveFilePath+'/'+savefilename,index=False)
+                save = True
+                # except:
 #                except Exception as e:
                     # print(f"Exception occurred while saving the file: {e}")
-                    save = False
+                    # save = False
         else:
             save = None
         return save
@@ -475,3 +476,7 @@ class BatchSegWin(QtWidgets.QMainWindow,segSettings.Settings):
             
         self.SaveFilePath = fname
         self.lineSavePath.setText(self.SaveFilePath)
+        
+    # def highlight_columns(self,col):
+    #     if col.name == 'Start [ms]':
+    #         return ['background-color: red' if val < 0 else '' for val in col]
